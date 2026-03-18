@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 
 interface Video {
   id: string;
@@ -27,7 +26,6 @@ interface VideoCardProps {
 }
 
 export default function VideoCard({ video }: VideoCardProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
   const [imageError, setImageError] = useState(false);
 
   const formatCurrency = (value: number) => {
@@ -62,6 +60,12 @@ export default function VideoCard({ video }: VideoCardProps) {
     );
   };
 
+  const handlePlayClick = () => {
+    if (video.videoUrl) {
+      window.open(video.videoUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow">
       {/* Video Preview */}
@@ -76,63 +80,60 @@ export default function VideoCard({ video }: VideoCardProps) {
               onError={() => setImageError(true)}
             />
             {/* Overlay gradient for better text visibility */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30"></div>
           </div>
         ) : (
           <div className={`absolute inset-0 bg-gradient-to-br ${getChannelColor(video.channel)} opacity-90`}></div>
         )}
 
-        {/* Play Button */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <button
-            onClick={() => {
-              if (video.videoUrl) {
-                window.open(video.videoUrl, '_blank');
-              }
-              setIsPlaying(!isPlaying);
-            }}
-            className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-all hover:scale-110 shadow-lg"
-          >
-            <svg className="w-8 h-8 text-gray-900 ml-1" fill="currentColor" viewBox="0 0 24 24">
+        {/* Play Button Overlay */}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors cursor-pointer group" onClick={handlePlayClick}>
+          <div className="w-20 h-20 bg-white/95 rounded-full flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all shadow-2xl">
+            <svg className="w-10 h-10 text-gray-900 ml-1.5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
-          </button>
+          </div>
         </div>
 
         {/* Rank Badge */}
-        <div className="absolute top-4 left-4 w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-gray-900 shadow-md">
+        <div className="absolute top-4 left-4 w-11 h-11 bg-white rounded-full flex items-center justify-center font-bold text-gray-900 shadow-lg z-10 text-sm">
           #{video.rank}
         </div>
 
         {/* Format Badge */}
-        <div className="absolute top-4 right-4 px-3 py-1 bg-white/90 rounded-full text-xs font-medium text-gray-900 shadow-md">
+        <div className="absolute top-4 right-4 px-3 py-1.5 bg-white/95 rounded-full text-xs font-semibold text-gray-900 shadow-lg z-10">
           {video.format}
+        </div>
+
+        {/* Channel Badge */}
+        <div className="absolute top-16 right-4 px-2.5 py-1 bg-blue-600 text-white rounded-md text-xs font-semibold shadow-lg z-10 capitalize">
+          {video.channel}
         </div>
 
         {/* Creator */}
         {video.creator && video.creator !== 'Unknown' && (
-          <div className="absolute bottom-4 left-4 right-4 text-center">
-            <div className="text-white font-semibold text-lg drop-shadow-lg">{video.creator}</div>
+          <div className="absolute bottom-4 left-4 right-4 text-center z-10">
+            <div className="text-white font-bold text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{video.creator}</div>
           </div>
         )}
       </div>
 
       {/* Campaign & Metrics */}
       <div className="p-4">
-        <h3 className="font-semibold text-gray-900 mb-3 line-clamp-2" title={video.campaign}>
+        <h3 className="font-semibold text-gray-900 mb-3 line-clamp-2 text-sm" title={video.campaign}>
           {video.campaign}
         </h3>
 
         {/* Spend & CPA */}
         <div className="grid grid-cols-2 gap-4 mb-3">
           <div>
-            <div className="text-xs text-gray-500 mb-1">Spend</div>
+            <div className="text-xs text-gray-500 mb-1 font-medium">Spend</div>
             <div className="text-lg font-bold text-gray-900">
               {formatCurrency(video.metrics.spend)}
             </div>
           </div>
           <div>
-            <div className="text-xs text-gray-500 mb-1">CPA</div>
+            <div className="text-xs text-gray-500 mb-1 font-medium">CPA</div>
             <div className="text-lg font-bold text-gray-900">
               {formatCurrency(video.metrics.cpa)}
             </div>
@@ -142,28 +143,38 @@ export default function VideoCard({ video }: VideoCardProps) {
         {/* CTR, Hook, Hold */}
         <div className="grid grid-cols-3 gap-2 mb-3">
           <div className="bg-gray-50 rounded-lg p-2 text-center">
-            <div className="text-xs text-gray-500 mb-1">CTR</div>
-            <div className="text-sm font-semibold text-gray-900">
+            <div className="text-xs text-gray-500 mb-1 font-medium">CTR</div>
+            <div className="text-sm font-bold text-gray-900">
               {video.metrics.ctr.toFixed(2)}%
             </div>
           </div>
           <div className="bg-gray-50 rounded-lg p-2 text-center">
-            <div className="text-xs text-gray-500 mb-1">HOOK</div>
-            <div className="text-sm font-semibold text-gray-900">
+            <div className="text-xs text-gray-500 mb-1 font-medium">HOOK</div>
+            <div className="text-sm font-bold text-gray-900">
               {video.metrics.hookRate.toFixed(2)}%
             </div>
           </div>
           <div className="bg-gray-50 rounded-lg p-2 text-center">
-            <div className="text-xs text-gray-500 mb-1">HOLD</div>
-            <div className="text-sm font-semibold text-gray-900">
+            <div className="text-xs text-gray-500 mb-1 font-medium">HOLD</div>
+            <div className="text-sm font-bold text-gray-900">
               {video.metrics.holdRate.toFixed(2)}%
             </div>
           </div>
         </div>
 
+        {/* Video Link Button */}
+        {video.videoUrl && (
+          <button
+            onClick={handlePlayClick}
+            className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
+          >
+            Watch Video →
+          </button>
+        )}
+
         {/* Change */}
         {video.metrics.change !== undefined && (
-          <div className="text-xs">
+          <div className="text-xs mt-2">
             {formatChange(video.metrics.change)}
           </div>
         )}

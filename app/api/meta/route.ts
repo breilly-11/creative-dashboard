@@ -35,7 +35,7 @@ export async function GET(request: Request) {
 
     // Transform API data to our format
     const videos = (data.data || [])
-      .filter((ad: any) => ad.creative?.video_id) // Only video ads
+      .filter((ad: any) => ad.creative?.video_id)
       .map((ad: any, index: number) => {
         const insights = ad.insights?.data?.[0] || {};
         const spend = parseFloat(insights.spend || 0);
@@ -60,15 +60,15 @@ export async function GET(request: Request) {
         const hookRate = impressions > 0 ? ((video30SecWatched / impressions) * 100) : 0;
         const holdRate = video30SecWatched > 0 ? ((videoThruPlay / video30SecWatched) * 100) : 0;
 
+        const videoId = ad.creative?.video_id;
+
         return {
           id: ad.id,
-          videoId: ad.creative?.video_id,
-          videoUrl: ad.creative?.object_story_spec?.video_data?.video_id
-            ? `https://www.facebook.com/video.php?v=${ad.creative.object_story_spec.video_data.video_id}`
-            : null,
+          videoId: videoId,
+          videoUrl: videoId ? `https://www.facebook.com/video.php?v=${videoId}` : null,
           thumbnailUrl: ad.creative?.thumbnail_url || 'https://via.placeholder.com/400x600/1877F2',
           title: ad.name || ad.creative?.title || `Ad ${index + 1}`,
-          creator: 'Unknown', // Meta API doesn't provide creator name easily
+          creator: 'Unknown',
           platform: 'meta',
           metrics: {
             spend: Math.round(spend),
