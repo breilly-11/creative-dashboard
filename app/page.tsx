@@ -10,7 +10,7 @@ interface Video {
   rank: number;
   channel: string;
   videoUrl: string | null;
-  thumbnailUrl: string; // Changed from thumbnail
+  thumbnailUrl: string;
   format: string;
   creator: string;
   campaign: string;
@@ -48,7 +48,7 @@ export default function Dashboard() {
             rank: index + 1,
             channel: 'meta',
             videoUrl: video.videoUrl,
-            thumbnailUrl: video.thumbnailUrl, // Changed from thumbnail
+            thumbnailUrl: video.thumbnailUrl,
             format: '9x16 Video',
             creator: video.creator,
             campaign: video.title,
@@ -96,7 +96,7 @@ export default function Dashboard() {
 
   const metrics = {
     totalSpend: Math.round(overallMetrics.totalSpend),
-    spendChange: 0, // TODO: Calculate from previous period
+    spendChange: 0,
     avgCPA: overallMetrics.count > 0 ? overallMetrics.avgCPA / overallMetrics.count : 0,
     cpaChange: 0,
     avgCTR: overallMetrics.count > 0 ? overallMetrics.avgCTR / overallMetrics.count : 0,
@@ -154,15 +154,15 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Video Grid */}
+        {/* Video Grid - More columns = smaller cards = less blurry */}
         {!loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
             {filteredVideos.length > 0 ? (
               filteredVideos.map((video) => (
                 <VideoCard key={video.id} video={video} />
               ))
             ) : (
-              <div className="col-span-4 text-center py-20">
+              <div className="col-span-full text-center py-20">
                 <p className="text-gray-500">No videos found for this channel.</p>
               </div>
             )}
