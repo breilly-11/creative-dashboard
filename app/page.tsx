@@ -1,104 +1,113 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MetricsOverview from '@/components/MetricsOverview';
 import ChannelFilter from '@/components/ChannelFilter';
 import VideoCard from '@/components/VideoCard';
 
+interface Video {
+  id: string;
+  rank: number;
+  channel: string;
+  videoUrl: string | null;
+  thumbnail: string;
+  format: string;
+  creator: string;
+  campaign: string;
+  metrics: {
+    spend: number;
+    cpa: number;
+    ctr: number;
+    hookRate: number;
+    holdRate: number;
+    change?: number;
+  };
+}
+
 export default function Dashboard() {
   const [selectedChannel, setSelectedChannel] = useState<'all' | 'tiktok' | 'meta' | 'snapchat'>('all');
-  const [sortBy, setSortBy] = useState<'spend' | 'engagement'>('spend');
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - will be replaced with real API data
-  const mockVideos = [
-    {
-      id: '1',
-      rank: 1,
-      channel: 'tiktok',
-      videoUrl: 'https://example.com/video1.mp4',
-      thumbnail: 'https://via.placeholder.com/400x600/8B5CF6/FFFFFF?text=Video+1',
-      format: '9x16 Video',
-      creator: 'Zak',
-      campaign: 'SYP 5vs100',
-      metrics: {
-        spend: 14243,
-        cpa: 99.60,
-        ctr: 0.31,
-        hookRate: 14,
-        holdRate: 22,
-        change: -13.2
-      }
-    },
-    {
-      id: '2',
-      rank: 2,
-      channel: 'tiktok',
-      videoUrl: 'https://example.com/video2.mp4',
-      thumbnail: 'https://via.placeholder.com/400x600/14B8A6/FFFFFF?text=Video+2',
-      format: '9x16 Video',
-      creator: 'Zak',
-      campaign: 'SYP MoneyHack',
-      metrics: {
-        spend: 14178,
-        cpa: 117.17,
-        ctr: 0.22,
-        hookRate: 18.62,
-        holdRate: 38.67,
-        change: -16.5
-      }
-    },
-    {
-      id: '3',
-      rank: 3,
-      channel: 'meta',
-      videoUrl: 'https://example.com/video3.mp4',
-      thumbnail: 'https://via.placeholder.com/400x600/F59E0B/FFFFFF?text=Video+3',
-      format: '9x16 Video',
-      creator: 'Zoe',
-      campaign: 'SYP DoubleSalary',
-      metrics: {
-        spend: 12012,
-        cpa: 100.94,
-        ctr: 0.28,
-        hookRate: 23.08,
-        holdRate: 6.87,
-        change: -7.8
-      }
-    },
-    {
-      id: '4',
-      rank: 4,
-      channel: 'snapchat',
-      videoUrl: 'https://example.com/video4.mp4',
-      thumbnail: 'https://via.placeholder.com/400x600/EF4444/FFFFFF?text=Video+4',
-      format: '9x16 Video',
-      creator: 'Henry',
-      campaign: 'SYP FinanceBro',
-      metrics: {
-        spend: 7282,
-        cpa: 99.75,
-        ctr: 0.55,
-        hookRate: 12.57,
-        holdRate: 20.46,
-        change: 3.8
-      }
-    },
-  ];
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const responses = await Promise.all([
+          fetch('/api/meta').then(r => r.json()),
+          // fetch('/api/tiktok').then(r => r.json()),
+          // fetch('/api/snapchat').then(r => r.json()),
+        ]);
 
-  const overallMetrics = {
-    totalSpend: 63578,
-    spendChange: -4.2,
-    avgCPA: 138.63,
-    cpaChange: 2.1,
-    avgCTR: 0.46,
-    ctrChange: -1.8,
-    avgHookRate: 18.4,
-    hookChange: 5.3
+        const allVideos: Video[] = [];
+
+        // Process Meta data
+        if (responses[0].videos) {
+          const metaVideos = responses[0].videos.map((video: any, index: number) => ({
+            id: video.id,
+            rank: index + 1,
+            channel: 'meta',
+            videoUrl: video.videoUrl,
+            thumbnail: video.thumbnailUrl,
+            format: '9x16 Video',
+            creator: video.creator,
+            campaign: video.title,
+            metrics: {
+              spend: video.metrics.spend,
+              cpa: video.metrics.cpa,
+              ctr: video.metrics.ctr,
+              hookRate: video.metrics.hookRate,
+              holdRate: video.metrics.holdRate,
+            }
+          }));
+          allVideos.push(...metaVideos);
+        }
+
+        // Sort by spend
+        allVideos.sort((a, b) => b.metrics.spend - a.metrics.spend);
+
+        // Update ranks after sorting
+        allVideos.forEach((video, index) => {
+          video.rank = index + 1;
+        });
+
+        setVideos(allVideos);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  // Calculate overall metrics
+  const overallMetrics = videos.reduce(
+    (acc, video) => ({
+      totalSpend: acc.totalSpend + video.metrics.spend,
+      avgCPA: acc.avgCPA + video.metrics.cpa,
+      avgCTR: acc.avgCTR + video.metrics.ctr,
+      avgHookRate: acc.avgHookRate + video.metrics.hookRate,
+      count: acc.count + 1,
+    }),
+    { totalSpend: 0, avgCPA: 0, avgCTR: 0, avgHookRate: 0, count: 0 }
+  );
+
+  const metrics = {
+    totalSpend: Math.round(overallMetrics.totalSpend),
+    spendChange: 0, // TODO: Calculate from previous period
+    avgCPA: overallMetrics.count > 0 ? overallMetrics.avgCPA / overallMetrics.count : 0,
+    cpaChange: 0,
+    avgCTR: overallMetrics.count > 0 ? overallMetrics.avgCTR / overallMetrics.count : 0,
+    ctrChange: 0,
+    avgHookRate: overallMetrics.count > 0 ? overallMetrics.avgHookRate / overallMetrics.count : 0,
+    hookChange: 0,
   };
 
   const filteredVideos = selectedChannel === 'all'
-    ? mockVideos
-    : mockVideos.filter(v => v.channel === selectedChannel);
+    ? videos
+    : videos.filter(v => v.channel === selectedChannel);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -121,7 +130,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="px-8 py-8">
         {/* Metrics Overview */}
-        <MetricsOverview metrics={overallMetrics} />
+        <MetricsOverview metrics={metrics} />
 
         {/* Channel Filter & Sort */}
         <div className="flex items-center justify-between mt-8 mb-6">
@@ -138,12 +147,27 @@ export default function Dashboard() {
           <ChannelFilter selected={selectedChannel} onChange={setSelectedChannel} />
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+          </div>
+        )}
+
         {/* Video Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredVideos.map((video) => (
-            <VideoCard key={video.id} video={video} />
-          ))}
-        </div>
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filteredVideos.length > 0 ? (
+              filteredVideos.map((video) => (
+                <VideoCard key={video.id} video={video} />
+              ))
+            ) : (
+              <div className="col-span-4 text-center py-20">
+                <p className="text-gray-500">No videos found for this channel.</p>
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
