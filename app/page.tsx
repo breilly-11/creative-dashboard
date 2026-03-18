@@ -10,7 +10,7 @@ interface Video {
   rank: number;
   channel: string;
   videoUrl: string | null;
-  thumbnail: string;
+  thumbnailUrl: string; // Changed from thumbnail
   format: string;
   creator: string;
   campaign: string;
@@ -48,7 +48,7 @@ export default function Dashboard() {
             rank: index + 1,
             channel: 'meta',
             videoUrl: video.videoUrl,
-            thumbnail: video.thumbnailUrl,
+            thumbnailUrl: video.thumbnailUrl, // Changed from thumbnail
             format: '9x16 Video',
             creator: video.creator,
             campaign: video.title,

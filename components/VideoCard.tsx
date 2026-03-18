@@ -7,7 +7,7 @@ interface Video {
   rank: number;
   channel: string;
   videoUrl: string | null;
-  thumbnail: string;
+  thumbnailUrl: string; // Changed from thumbnail to thumbnailUrl
   format: string;
   creator: string;
   campaign: string;
@@ -71,13 +71,15 @@ export default function VideoCard({ video }: VideoCardProps) {
       {/* Video Preview */}
       <div className="relative aspect-[9/16] bg-gradient-to-br from-gray-100 to-gray-200">
         {/* Thumbnail Image */}
-        {video.thumbnail && !imageError ? (
+        {video.thumbnailUrl && !imageError ? (
           <div className="absolute inset-0">
             <img
-              src={video.thumbnail}
+              src={video.thumbnailUrl}
               alt={video.campaign}
               className="w-full h-full object-cover"
               onError={() => setImageError(true)}
+              crossOrigin="anonymous"
+              referrerPolicy="no-referrer"
             />
             {/* Overlay gradient for better text visibility */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30"></div>
