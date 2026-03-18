@@ -1,18 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// Function to upgrade thumbnail URL to higher quality
-function getHighQualityThumbnail(url: string): string {
-  if (!url || url.includes('placeholder')) return url;
-
-  // Replace low-res parameters with high-res ones
-  let highQualityUrl = url
-    .replace(/p\d+x\d+/g, 'p720x720')  // Replace pXXxYY with p720x720
-    .replace(/q\d+/g, 'q85')            // Replace quality with 85
-    .replace(/c0\.\d+x0\.\d+f/g, '');   // Remove cropping parameters
-
-  return highQualityUrl;
-}
-
 export async function GET(request: Request) {
   try {
     const accessToken = process.env.META_ACCESS_TOKEN;
@@ -74,14 +61,14 @@ export async function GET(request: Request) {
         const holdRate = video30SecWatched > 0 ? ((videoThruPlay / video30SecWatched) * 100) : 0;
 
         const videoId = ad.creative?.video_id;
-        const originalThumbnail = ad.creative?.thumbnail_url || 'https://via.placeholder.com/400x600/1877F2';
-        const highQualityThumbnail = getHighQualityThumbnail(originalThumbnail);
+        // Use original thumbnail URL without modification to preserve signature
+        const thumbnailUrl = ad.creative?.thumbnail_url || 'https://via.placeholder.com/400x600/1877F2';
 
         return {
           id: ad.id,
           videoId: videoId,
           videoUrl: videoId ? `https://www.facebook.com/video.php?v=${videoId}` : null,
-          thumbnailUrl: highQualityThumbnail,
+          thumbnailUrl: thumbnailUrl,
           title: ad.name || ad.creative?.title || `Ad ${index + 1}`,
           creator: 'Unknown',
           platform: 'meta',
